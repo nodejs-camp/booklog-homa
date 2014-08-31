@@ -1,0 +1,6 @@
+extend layout
+
+block content
+  ul
+    each val, index in posts
+      li= 'title'+index+':'+val.title+' '+val.content
