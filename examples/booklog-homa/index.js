@@ -64,13 +64,14 @@ var posts = [{
 }];
 
 var bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
-
+var session = require('express-session');
 var passport = require('passport')
   , FacebookStrategy = require('passport-facebook').Strategy;
 
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+app.use(session({ secret: '12345678' }));
 app.use(passport.initialize());//use is mean middleware...(?)
 app.use(passport.session());
 
@@ -124,6 +125,8 @@ app.get('/auth/facebook/callback',
   passport.authenticate('facebook', { successRedirect: '/',
                                       failureRedirect: '/login' }));
 
+
+
 app.all('*', function(req, res, next){
   if (!req.get('Origin')) return next();
   // use "*" here to accept any origin
@@ -135,9 +138,22 @@ app.all('*', function(req, res, next){
   next();
 });
 
+app.get('/', function(req, res, next) {
+  console.log(req.isAuthenticated());
+  if (req.isAuthenticated()) {
+    next();
+  } else {
+    res.render('login');
+  }
+});
+
 app.get('/', function(req, res) {
-  //console.log(req);
-  res.render('login');
+  res.render('index');
+});
+
+app.get('/logout', function(req, res){
+  req.logout();
+  res.redirect('/');
 });
 
 app.get('/download', function(req, res) {
