@@ -46,18 +46,15 @@ block content
 
     script(type='text/template', id='tmpl-post')
       <% _.each(articles, function(article) { %>
-      h1 <%= article.subject %>
-      p.lead
-        | by
-        a(href='#')
-      hr
-      p
-        span.glyphicon.glyphicon-time
-        | Posted on August 24, 2013 at 9:00 PM
-      hr
-      img.img-responsive(src='http://placehold.it/900x300', alt='')
-      hr
-      p.lead
-        | <%= article.content %>
-      hr
+      .well
+        h1 <%= article.subject %>
+        p.lead
+          | by
+          | &nbsp;<%= article._author.name %>
+        p
+          span.glyphicon.glyphicon-time
+          | Posted on
+        img.img-responsive(src='http://placehold.it/900x300', alt='')
+        p.lead
+          | <%= article.content %>
       <% }); %>
