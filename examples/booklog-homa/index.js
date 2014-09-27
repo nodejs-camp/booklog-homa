@@ -89,24 +89,20 @@ passport.use(new FacebookStrategy({
     callbackURL: "http://localhost:3000/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
-    //console.log(profile);
-    var user = new app.db.members(
-    {
-       id: profile.id,
-       name: profile.displayName,
-       accountSrc: profile.provider,
-       fullInfo: profile
+    app.db.members.findOne({"fullInfo._json.id": profile.id},
+    function(err, user) {
+      if (!user) {
+        var user = new app.db.members(
+        {
+           id: profile.id,
+           name: profile.displayName,
+           accountSrc: profile.provider,
+           fullInfo: profile
+        });
+        user.save();//new a member.
+      }
+      return done(null, user);
     });
-
-    user.save();//new a member.
-    //console.log(user);
-    return done(null, user);
-
-/*
-    model.findOrCreate(..., function(err, user) {
-      if (err) { return done(err); }
-      done(null, user);
-    });*/
   }
 ));
 
