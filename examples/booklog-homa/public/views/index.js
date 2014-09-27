@@ -6,15 +6,15 @@
 /**
  * MODELS
  **/
-app.Post = Backbone.Model.extend({  
-  url: 'http://localhost:3000/1/post',
+app.Article = Backbone.Model.extend({  
+  url: 'http://localhost:3000/1/article',
   defaults: {
     success: false,
     errors: [],
     errfor: {},
     
-	posts: [{
-	       "content": "hello",
+	articles: [{
+	       "content": "no articles",
 	       "_id": "5402de2f559097cdf139fff9",
 	       "subject": "abc123"
 	   }]
@@ -29,16 +29,13 @@ app.Post = Backbone.Model.extend({
     events: {
     },
     initialize: function() {
-        this.model = new app.Post();
+        this.model = new app.Article();
         this.template = _.template($('#tmpl-post').html());
-
         this.model.bind('change', this.render, this);
-        
         this.model.fetch();
     },
     render: function() {
         var data = this.template(this.model.attributes);
-
         this.$el.html(data);
         return this;
     }

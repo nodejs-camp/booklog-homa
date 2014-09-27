@@ -45,8 +45,8 @@ block content
                   | Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore, perspiciatis adipisci accusamus laudantium odit aliquam repellat tempore quos aspernatur vero.
 
     script(type='text/template', id='tmpl-post')
-      <% _.each(posts, function(post) { %>
-      h1 <%= post.subject %>
+      <% _.each(articles, function(article) { %>
+      h1 <%= article.subject %>
       p.lead
         | by
         a(href='#')
@@ -58,6 +58,6 @@ block content
       img.img-responsive(src='http://placehold.it/900x300', alt='')
       hr
       p.lead
-        | <%= post.content %>
+        | <%= article.content %>
       hr
       <% }); %>
