@@ -136,8 +136,8 @@ app.all('*', function(req, res, next){
 });
 
 app.get('/', function(req, res) {
-  console.log(req);
-  res.render('index');
+  //console.log(req);
+  res.render('login');
 });
 
 app.get('/download', function(req, res) {
