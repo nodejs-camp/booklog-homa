@@ -31,9 +31,9 @@ var postSchema = new mongoose.Schema({
 var memberSchema = new mongoose.Schema({
     id: {type: String, unique:true},
     name: {type: String},
-    createDate: {type: String},
-    memberProvider:{type: String},
-    loginInfo:{}
+    createTiming: {type: Date, default:Date.now},
+    accountSrc: {type: String},
+    fullInfo: {}
 });
 
 //put to express framework
@@ -43,7 +43,7 @@ var memberSchema = new mongoose.Schema({
 //Collection name=&model_name+"s"(lower case), e.g. posts.
 app.db = {
   posts: mongoose.model('Post', postSchema),
-  members: mongoose.model('Member', postSchema)
+  members: mongoose.model('Member', memberSchema)
 };
 
 // Optional since express defaults to CWD/views
@@ -71,7 +71,7 @@ var passport = require('passport')
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-app.use(session({ secret: '12345678' }));
+app.use(session({ secret: 'abd333Sh21' }));
 app.use(passport.initialize());//use is mean middleware...(?)
 app.use(passport.session());
 
@@ -89,20 +89,18 @@ passport.use(new FacebookStrategy({
     callbackURL: "http://localhost:3000/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
-    console.log(profile);
-    return done(null, profile);
-/*
-    var model = req.app.db.members;
-    var member = {
+    //console.log(profile);
+    var user = new app.db.members(
+    {
        id: profile.id,
        name: profile.displayName,
-       createDate: sysdate,
-       memberProvider:provider,
-       loginInfo:profile
-    };
+       accountSrc: profile.provider,
+       fullInfo: profile
+    });
 
-    var MEMBER = new model(member);//new a document by post object.
-    MEMBER.save();*/
+    user.save();//new a member.
+    //console.log(user);
+    return done(null, user);
 
 /*
     model.findOrCreate(..., function(err, user) {
@@ -115,7 +113,7 @@ passport.use(new FacebookStrategy({
 // Redirect the user to Facebook for authentication.  When complete,
 // Facebook will redirect the user back to the application at
 //     /auth/facebook/callback
-app.get('/auth/facebook', passport.authenticate('facebook'));
+app.get('/auth/facebook',passport.authenticate('facebook'));
 
 // Facebook will redirect the user to this URL after approval.  Finish the
 // authentication process by attempting to obtain an access token.  If
@@ -124,8 +122,6 @@ app.get('/auth/facebook', passport.authenticate('facebook'));
 app.get('/auth/facebook/callback', 
   passport.authenticate('facebook', { successRedirect: '/',
                                       failureRedirect: '/login' }));
-
-
 
 app.all('*', function(req, res, next){
   if (!req.get('Origin')) return next();
@@ -139,7 +135,7 @@ app.all('*', function(req, res, next){
 });
 
 app.get('/', function(req, res, next) {
-  console.log(req.isAuthenticated());
+  //console.log(req.isAuthenticated());
   if (req.isAuthenticated()) {
     next();
   } else {
@@ -148,7 +144,12 @@ app.get('/', function(req, res, next) {
 });
 
 app.get('/', function(req, res) {
+  console.log(req.user);
   res.render('index');
+});
+
+app.get('/login', function(req, res){
+  res.render('login');
 });
 
 app.get('/logout', function(req, res){
