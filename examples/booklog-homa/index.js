@@ -28,13 +28,22 @@ var postSchema = new mongoose.Schema({
     content: String
 });
 
+var memberSchema = new mongoose.Schema({
+    id: {type: String, unique:true},
+    name: {type: String},
+    createDate: {type: String},
+    memberProvider:{type: String},
+    loginInfo:{}
+});
+
 //put to express framework
 //'Post'=Tablename
 //Model is definition of document.
 //new schema to a model, naming for the schema to a model named 'Post'.
 //Collection name=&model_name+"s"(lower case), e.g. posts.
 app.db = {
-  posts: mongoose.model('Post', postSchema)
+  posts: mongoose.model('Post', postSchema),
+  members: mongoose.model('Member', postSchema)
 };
 
 // Optional since express defaults to CWD/views
@@ -55,9 +64,23 @@ var posts = [{
 }];
 
 var bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 var passport = require('passport')
   , FacebookStrategy = require('passport-facebook').Strategy;
+
+app.use(passport.initialize());//use is mean middleware...(?)
+app.use(passport.session());
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(id, done) {
+  done(null, id);
+});
 
 passport.use(new FacebookStrategy({
     clientID: "573894422722633",
@@ -65,10 +88,26 @@ passport.use(new FacebookStrategy({
     callbackURL: "http://localhost:3000/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
-    User.findOrCreate(..., function(err, user) {
+    console.log(profile);
+    return done(null, profile);
+/*
+    var model = req.app.db.members;
+    var member = {
+       id: profile.id,
+       name: profile.displayName,
+       createDate: sysdate,
+       memberProvider:provider,
+       loginInfo:profile
+    };
+
+    var MEMBER = new model(member);//new a document by post object.
+    MEMBER.save();*/
+
+/*
+    model.findOrCreate(..., function(err, user) {
       if (err) { return done(err); }
       done(null, user);
-    });
+    });*/
   }
 ));
 
@@ -85,10 +124,6 @@ app.get('/auth/facebook/callback',
   passport.authenticate('facebook', { successRedirect: '/',
                                       failureRedirect: '/login' }));
 
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
-
 app.all('*', function(req, res, next){
   if (!req.get('Origin')) return next();
   // use "*" here to accept any origin
@@ -101,6 +136,7 @@ app.all('*', function(req, res, next){
 });
 
 app.get('/', function(req, res) {
+  console.log(req);
   res.render('index');
 });
 
