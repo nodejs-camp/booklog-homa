@@ -13,6 +13,30 @@ var pub = __dirname + '/public';
 var app = express();
 app.use(express.static(pub));
 
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/booklog2');
+
+var dbConn = mongoose.connection;
+dbConn.on('error', console.error.bind(console, 'connection error:'));
+dbConn.once('open', function callback () {
+  console.log('MongoDB: connected.'); 
+});
+
+//Table
+var postSchema = new mongoose.Schema({
+    subject: { type: String, default: ''},
+    content: String
+});
+
+//put to express framework
+//'Post'=Tablename
+//Model is definition of document.
+//new schema to a model, naming for the schema to a model named 'Post'.
+//Collection name=&model_name+"s"(lower case), e.g. posts.
+app.db = {
+  posts: mongoose.model('Post', postSchema)
+};
+
 // Optional since express defaults to CWD/views
 
 app.set('views', __dirname + '/views');
@@ -22,66 +46,19 @@ app.set('views', __dirname + '/views');
 // (although you can still mix and match)
 app.set('view engine', 'jade');
 
-function User(name, email) {
-  this.name = name;
-  this.email = email;
-}
+var posts = [{
+  subject: "Hello",
+  content: "Hi !"
+}, {
+  subject: "World",
+  content: "Hi !"
+}];
 
-// Dummy users
-var users = [
-    new User('tj', 'tj@vision-media.ca')
-  , new User('ciaran', 'ciaranj@gmail.com')
-  , new User('aaron', 'aaron.heckmann+github@gmail.com')
-];
+var bodyParser = require('body-parser');
 
-app.get('/', function(req, res){
-  res.render('users', { users: users });
-});
-
-var posts = [
-{title:"Sunday",content:"is nice"},
-{title:"Monday",content:"is blue"},
-{title:"Tuesday",content:"is sleepy"},
-{title:"Wedensday",content:"is boring"},
-{title:"Thursday",content:"is soso"},
-{title:"Friday",content:"is happy"},
-{title:"Saturday",content:"is very happy"}
-];
-/*var posts = [
-{
-	title:"Sunday",
-    content:"a"
-}];*/
-var retryCnt = 0;
-
-//parm1:uri
-//parm2:callback function(lambda:Take a function as a parameter)
-//url routing
-/*
-app.get('/1/post/',function(req, res){
-  //object
-  var result = 
-  {
-  	title:"Test",//equal to "title":"Test",//Key(attribute)-value pairs, key is a string and the 
-  	content:"Foo"
-  };//This a JSON format and this object represents a topic.
-    //Only double quotes are allowed in JSON.
-
-  res.send(result);
-});*/
-
-/* all means post&get&put&delete */
-//app.all('/',function(req,res){});
-
-/*
-app.get('*',function(req,res,next){
-	console.log('Count:'+count++);
-	console.log(req);
-	if (req.headers.host === 'localhost:3000')
-		console.log("Access denied");
-	else
-        next();//keep the following functions.
-})*/
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 app.all('*', function(req, res, next){
   if (!req.get('Origin')) return next();
@@ -94,101 +71,119 @@ app.all('*', function(req, res, next){
   next();
 });
 
-app.get('/welcome',function(req, res){
-	res.render('index');//Could only send one time.
+app.get('/', function(req, res) {
+  res.render('index');
 });
 
-app.get('/download',function(req, res){
-	var events = require('events');//class, nodejs default package:http://nodejs.org/api/events.html#events_class_events_eventemitter
-    var workflow = new events.EventEmitter();//object
+app.get('/download', function(req, res) {
+  var events = require('events');
+  var workflow = new events.EventEmitter();
 
-    workflow.outcome = {
-    	success:false,
+  workflow.outcome = {
+    success: false,
+  };
+
+  workflow.on('vaidate', function() {
+    var password = req.query.password;
+
+    if (typeof(req.retries) === 'undefined')
+      req.retries = 3;
+
+    if (password === '123456') {
+      return workflow.emit('success');
+    }
+
+    return workflow.emit('error');
+  });
+
+  workflow.on('success', function() {
+    workflow.outcome.success = true;
+    workflow.outcome.redirect = { 
+      url: '/welcome'
     };
+    workflow.emit('response');
+  });
 
-    workflow.on('validate',function(){
-       console.log('retryCnt='+retryCnt);
-       var password = req.query.password;
-       if (retryCnt < 3){
-           if (password === '123456')
-               workflow.emit('success');//return workflow.emit('success');
-           else
-               workflow.emit('error');//return workflow.emit('error');
-       }
-       workflow.emit('response');
-    });
+  workflow.on('error', function() {
+    if (req.retries > 0) {
+      req.retries--;
+      workflow.outcome.retries = req.retries;
+      workflow.emit('response');
+    }
 
-    workflow.on('success',function(){
-    	retryCnt = 0;
-    	workflow.outcome.success =  true;
-    	workflow.outcome.redirect = {
-    		url:'/post'
-    	}
-    	//workflow.emit('response');
-    });
+    workflow.outcome.success = false;
+    workflow.emit('response');
+  });
 
-    workflow.on('error',function(){
-    	retryCnt++;
-    	workflow.outcome.success =  false;
-    	workflow.outcome.retry = retryCnt;
-    	//workflow.emit('response');
-    });
+  workflow.on('response', function() {
+    return res.send(workflow.outcome);
+  });
 
-    workflow.on('response',function(){
-    	return res.send(workflow.outcome);
-    });
-
-    workflow.emit('validate');//should be after workflow.on(these are settings, settings first)
+  return workflow.emit('vaidate');
 });
 
-app.get('/post',function(req, res){
-	res.render('post',{
-		posts:posts
-	});
+app.get('/post', function(req, res) {
+  res.render('post', {
+    posts: posts
+  });
 });
 
-app.get('/1/post/',function(req, res){
-	res.send(posts);//Could only send one time.
+app.get('/1/post/:id', function(req, res) { 
+  var id = req.params.id;
+  var model = req.app.db.posts;
+
+  //Read
+  //"_id:" is the attribute auto generated by mongodb, meanwhile it's represented the document name also.
+  model.findOne({_id: id}, function(err, post) {
+    res.send({post: post}); 
+  });
 });
 
-app.post('/1/post/',function(req, res){
-	//postsCnt++;
-	var subject;
-    var content;
+app.get('/1/post', function(req, res) { 
+  var model = req.app.db.posts;
 
-	console.log(req.body);
-	console.log(req.query);
-
-	//== compare values
-	//=== compare value & type
-	if (typeof(req.body) === "undefined"){//REST console default 使用 query string
-		subject = req.query.subject;
-	    content = req.query.content;
-	}else{
-		subject = req.body.subject;
-	    content = req.body.content;
-	}
-
-	var post = 
-	{
-	    title:subject,//Key(attribute)-value pairs
-	    content:content
-	};//This a JSON format and this object represents a topic.
-	
-	posts.push(post);
-    res.send({status:"OK"});
+  model.find(function(err, posts) {
+    res.send({posts: posts}); 
+  });
 });
 
-//: means a variable.
-app.put('/1/post/:postId',function(req, res){
-	var id=req.params.postId;
-	res.send("Update a post:"+id);
+
+app.post('/1/post', function(req, res) {
+  var model = req.app.db.posts;
+
+  var subject;
+  var content;
+
+  if (typeof(req.body) === 'undefined') {
+    subject = req.query.subject;
+    content = req.query.content;
+  } else {
+    subject = req.body.subject;
+    content = req.body.content;   
+  }
+
+  var post = {
+    subject: subject,
+    content: content
+  };
+
+  //posts.push(post);
+  //Create
+  var card = new model(post);//new a document by post object.
+  card.save();
+
+  res.send({ status: 'OK'});
 });
 
-app.delete('/1/post/',function(req, res){
-	res.send("delete a post");
+app.delete('/1/post', function(req, res) {
+  res.send("Delete a post");
 });
 
+app.put('/1/post/:postId', function(req, res) {
+  var id = req.params.postId;
+
+  res.send("Update a post: " + id);
+});
 
 // change this to a better error handler in your code
 // sending stacktrace to users in production is not good
