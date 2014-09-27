@@ -26,6 +26,7 @@ dbConn.once('open', function callback () {
 var articleSchema = new mongoose.Schema({
     subject: { type: String, default: ''},
     content: { type: String },
+    createTiming: {type: Date, default:Date.now},
     _author: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' }
 });
 

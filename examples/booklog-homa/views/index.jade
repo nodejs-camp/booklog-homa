@@ -53,7 +53,7 @@ block content
           | &nbsp;<%= article._author.name %>
         p
           span.glyphicon.glyphicon-time
-          | Posted on
+          | Posted on <%= article.createTiming %>
         img.img-responsive(src='http://placehold.it/900x300', alt='')
         p.lead
           | <%= article.content %>
