@@ -45,17 +45,20 @@ block content
                   | Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore, perspiciatis adipisci accusamus laudantium odit aliquam repellat tempore quos aspernatur vero.
 
     script(type='text/template', id='tmpl-post')
-      div#sortOptions
-        button.btn.btn-primary.btn-sort Create Date
+      div#actions
+        .btn-group
+          button.btn.btn-primary.btn-sort Create Date
+          button.btn.btn-primary.btn-format View by days ago
       <% _.each(articles, function(article) { %>
-      .well
+      .well(style='margin-top: 20px;')
         h1 <%= article.subject %>
         p.lead
           | by
           | &nbsp;<%= article._author.name %>
         p
           span.glyphicon.glyphicon-time
-          | Posted on <%= article.createTiming %>
+          | Posted on 
+          span.post-date <%= article.createTiming %>
         img.img-responsive(src='http://placehold.it/900x300', alt='')
         p.lead
           | <%= article.content %>

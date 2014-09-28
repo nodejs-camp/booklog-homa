@@ -268,7 +268,7 @@ app.get('/1/article/tag/:tag', function(req, res) {
   .find({$text:{$search:tag}})
   .populate('_author')
   .exec(function(err, articles) {
-    /*console.log(articles);
+    console.log(articles)
     for (seq in articles){
       console.log("seq="+seq);
       console.log("article="+articles[seq]);
@@ -276,7 +276,7 @@ app.get('/1/article/tag/:tag', function(req, res) {
       console.log("content="+articles[seq].content);
       console.log("_author="+articles[seq]._author);
       console.log("name="+articles[seq]._author.name);
-    }*/
+    }
     res.send({articles: articles}); 
   });
 

@@ -8,7 +8,7 @@
  **/
 app.SearchedSubject = Backbone.Model.extend({  
   //url: function(){return 'http://localhost:3000/1/article/author/'+this.attributes.name},
-  url: function(){return 'http://localhost:3000/1/article/tag/'+this.tag},
+  url: function(){return 'http://localhost:3000/1/article/tag/'+this.attributes.tag},
   tag: "",
   defaults: {
     success: false,
@@ -74,7 +74,8 @@ app.Article = Backbone.Model.extend({
   app.PostView = Backbone.View.extend({
   	el: '#blog-post',
     events: {
-      'click.btn-sort':'sort'
+      'click .btn-sort':'sort',//space between click and . is mandatory.
+      'click .btn-format':'formatDate'
     },
     initialize: function() {
         this.model = new app.Article();
@@ -85,6 +86,7 @@ app.Article = Backbone.Model.extend({
     render: function() {
         var data = this.template(this.model.attributes);
         this.$el.html(data);
+        //this.formatDate();
         return this;
     },
     sort: function() {
@@ -93,6 +95,16 @@ app.Article = Backbone.Model.extend({
       //this.model.set('tag', tag);
       this.model.query = '?sort=date';
       this.model.fetch();
+    },
+    formatDate: function(){
+       //console.log("formatDate");
+       this.$el.find('.post-date').each(function () {
+          var me = $(this);
+          //console.log("me.text()="+me.text());
+          //var fromNow = moment( me.text() ).startOf('day').fromNow();
+          
+          me.html( moment( me.text() ).startOf('day').fromNow() );
+        });
     }
   });
 
