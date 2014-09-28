@@ -7,8 +7,9 @@
  * MODELS
  **/
 app.SearchedSubject = Backbone.Model.extend({  
-  url: function(){return 'http://localhost:3000/1/article/author/'+this.attributes.name},
-  name: "",
+  //url: function(){return 'http://localhost:3000/1/article/author/'+this.attributes.name},
+  url: function(){return 'http://localhost:3000/1/article/tag/'+this.attributes.tag},
+  tag: "",
   defaults: {
     success: false,
     errors: [],
@@ -61,9 +62,9 @@ app.Article = Backbone.Model.extend({
         return this;
     },
     search: function() {
-      var name = this.$el.find('#search_tag').val();
+      var tag = this.$el.find('#search_tag').val();
       //alert('ok');
-      this.model.set('name', name);
+      this.model.set('tag', tag);
       this.model.fetch();
     }
   });

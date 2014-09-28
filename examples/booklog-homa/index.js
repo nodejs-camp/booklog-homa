@@ -30,6 +30,13 @@ var articleSchema = new mongoose.Schema({
     _author: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' }
 });
 
+/*
+var textSearch = require('mongoose-text-search');
+articleSchema.plugin(textSearch);
+articleSchema.index({ content: 'text' });*/
+
+articleSchema.index({ content:'text', subject:"text"});
+
 var memberSchema = new mongoose.Schema({
     id: {type: String, unique:true},
     name: {type: String},
@@ -219,6 +226,7 @@ app.get('/1/article/:id', function(req, res) {
   });
 });
 
+/*
 app.get('/1/article/author/:name', function(req, res) { 
   var name = req.params.name;
   var authorId;
@@ -251,10 +259,31 @@ app.get('/1/article/author/:name', function(req, res) {
     //authorId = author.id;
     //console.log("author id="+authorId);
   });
-  
-
-
   console.log("searching...");
+});*/
+
+app.get('/1/article/tag/:tag', function(req, res) { 
+  var tag = req.params.tag;
+  app.db.articles
+  .find({$text:{$search:tag}})
+  .populate('_author')
+  .exec(function(err, articles) {
+    /*console.log(articles);
+    for (seq in articles){
+      console.log("seq="+seq);
+      console.log("article="+articles[seq]);
+      console.log("subject="+articles[seq].subject);
+      console.log("content="+articles[seq].content);
+      console.log("_author="+articles[seq]._author);
+      console.log("name="+articles[seq]._author.name);
+    }*/
+    res.send({articles: articles}); 
+  });
+
+  /*
+  app.db.articles.textSearch(keyword, function(err, output){
+    res.send({articles: articles.}); 
+  });*/
 });
 
 app.get('/1/article', function(req, res) { 
