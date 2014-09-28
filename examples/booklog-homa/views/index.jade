@@ -60,13 +60,13 @@ block content
       <% }); %>
 
     script(type='text/template', id='tmpl-results')
-      <% _.each(subjects, function(subject) { %>
+      <% _.each(articles, function(article) { %>
       .well
-        h1 <%= subject.subject %>
+        h1 <%= article.subject %>
         p.lead
           | by
-          | &nbsp;<%= subject._author.name %>
+          | &nbsp;<%= article._author.name %>
         p
           span.glyphicon.glyphicon-time
-          | Posted on <%= subject.createTiming %>
+          | Posted on <%= article.createTiming %>
       <% }); %>

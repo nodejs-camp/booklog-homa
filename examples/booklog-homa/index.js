@@ -219,8 +219,41 @@ app.get('/1/article/:id', function(req, res) {
   });
 });
 
-app.get('/1/article/tag/:tag', function(req, res) { 
-  var tag = req.params.tag;
+app.get('/1/article/author/:name', function(req, res) { 
+  var name = req.params.name;
+  var authorId;
+  console.log("search author name="+name);
+
+  app.db.members.findOne({name: name}, function(err, author) {
+    console.log("author="+author);
+    if (author){
+        console.log("author id="+author._id);
+        app.db.articles
+        .find({_author:author._id})
+        .populate('_author')
+        .exec(function(err, articles) {
+          console.log(articles);
+          for (seq in articles){
+              console.log("seq="+seq);
+              console.log("article="+articles[seq]);
+              console.log("subject="+articles[seq].subject);
+              console.log("content="+articles[seq].content);
+              console.log("_author="+articles[seq]._author);
+              console.log("name="+articles[seq]._author.name);
+          }
+          res.send({articles: articles}); 
+        });
+    }else{
+      //res.send({articles: []});
+      //res.send({articles: null});
+      res.send(null);
+    }
+    //authorId = author.id;
+    //console.log("author id="+authorId);
+  });
+  
+
+
   console.log("searching...");
 });
 
