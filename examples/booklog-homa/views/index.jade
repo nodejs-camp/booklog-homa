@@ -45,6 +45,8 @@ block content
                   | Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore, perspiciatis adipisci accusamus laudantium odit aliquam repellat tempore quos aspernatur vero.
 
     script(type='text/template', id='tmpl-post')
+      div#sortOptions
+        button.btn.btn-primary.btn-sort Create Date
       <% _.each(articles, function(article) { %>
       .well
         h1 <%= article.subject %>

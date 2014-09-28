@@ -289,10 +289,23 @@ app.get('/1/article/tag/:tag', function(req, res) {
 app.get('/1/article', function(req, res) { 
   //var Article = app.db.articles;
   //var id;
+  var sort = req.query.sort; // ?sort=date
+  var options = {sort: 'createTiming'};
+
+  // Default options
+  /*
+  options = {
+    sort: 'timeCreated'
+  };*/
+
+  if (sort === 'date') {
+    options.sort = '-createTiming'
+  }
   
   app.db.articles
   .find()
   .populate('_author')
+  .sort(options.sort)
   .exec(function(err, articles) {
     /*console.log(articles);
     for (seq in articles){
