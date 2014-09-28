@@ -94,7 +94,7 @@ passport.use(new FacebookStrategy({
   function(accessToken, refreshToken, profile, done) {
     app.db.members.findOne({"fullInfo._json.id": profile.id},
     function(err, user) {
-      if (!user) {
+      if (!user) {//判斷是否為return user
         var user = new app.db.members(
         {
            id: profile.id,
@@ -217,6 +217,11 @@ app.get('/1/article/:id', function(req, res) {
   app.db.articles.findOne({_id: id}, function(err, article) {
     res.send({article: article}); 
   });
+});
+
+app.get('/1/article/tag/:tag', function(req, res) { 
+  var tag = req.params.tag;
+  console.log("searching...");
 });
 
 app.get('/1/article', function(req, res) { 

@@ -9,12 +9,12 @@ block content
             .col-lg-8
               div#blog-post
             .col-md-4
-              .well
-                h4 Blog Search
+              .well#search-section
+                h4 Author Search
                 .input-group
-                  input.form-control(type='text')
+                  input.form-control#search_tag(type='text')
                   span.input-group-btn
-                    button.btn.btn-default(type='button')
+                    button.btn.btn-default.btn-search(type='button')
                       span.glyphicon.glyphicon-search
               .well
                 h4 Blog Categories
@@ -57,4 +57,16 @@ block content
         img.img-responsive(src='http://placehold.it/900x300', alt='')
         p.lead
           | <%= article.content %>
+      <% }); %>
+
+    script(type='text/template', id='tmpl-results')
+      <% _.each(subjects, function(subject) { %>
+      .well
+        h1 <%= subject.subject %>
+        p.lead
+          | by
+          | &nbsp;<%= subject._author.name %>
+        p
+          span.glyphicon.glyphicon-time
+          | Posted on <%= subject.createTiming %>
       <% }); %>
