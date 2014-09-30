@@ -74,6 +74,7 @@ var posts = [{
 }];*/
 
 var bodyParser = require('body-parser');
+var jsonParser = bodyParser.json();
 var session = require('express-session');
 var passport = require('passport')
   , FacebookStrategy = require('passport-facebook').Strategy;
@@ -299,7 +300,7 @@ app.get('/1/article', function(req, res) {
   };*/
 
   if (sort === 'date') {
-    options.sort = '-createTiming'
+    options.sort = '-createTiming';
   }
   
   app.db.articles
@@ -336,19 +337,20 @@ app.get('/1/article', function(req, res) {
 });
 
 
-app.post('/1/article', function(req, res) {
+app.post('/1/article', jsonParser, function(req, res) {
   //var model = req.app.db.posts;
 
-  var subject;
-  var content;
+  var subject = req.body.subject;
+  var content = req.body.content;
 
+  /*
   if (typeof(req.body.subject) === 'undefined') {
     subject = req.query.subject;
     content = req.query.content;
   } else {
     subject = req.body.subject;
-    content = req.body.content;   
-  }
+    content = req.body.content;
+  }*/
 
   /*
   var post = {

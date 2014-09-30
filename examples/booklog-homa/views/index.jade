@@ -5,16 +5,18 @@ block feet
 
 block content
     .container
-        div#search-section(style='margin-bottom: 20px;')
-          .input-group
+        div(style='margin-bottom: 20px;')
+          .input-group#search-section
             span.input-group-btn
-              button.btn.btn-default.btn-search(type='button')
+              button.btn.btn-default#btn-search(type='button')
                 span.glyphicon.glyphicon-search
             input.form-control#search_tag(type='text')
         .row
             .col-lg-8
-              div#blog-post
+              #article-section
             .col-md-4
+              .well
+                #searchRslt-section
               .well
                 h4 Blog Categories
                 .row
@@ -42,24 +44,9 @@ block content
                 h4 Side Widget Well
                 p
                   | Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore, perspiciatis adipisci accusamus laudantium odit aliquam repellat tempore quos aspernatur vero.
-          .col-lg-8
-              form.form-horizontal
-              fieldset
-              legend Write down your thoughts.
-                .control-group
-                  label.control-label(for="subject") Subject
-                  .controls
-                    input#subject.input-xlarge(type="text", placeholder="Create your article.", size="78")
-                .control-group
-                  label.control-label(for="content") Content
-                  .controls
-                    textarea#content(rows="10", cols="80")
-                .control-group
-                  label.control-label(for="post-submit")
-                  .controls
-                    button#post-submit.btn.btn-primary Post
+          .col-lg-8#post-section
 
-    script(type='text/template', id='tmpl-post')
+    script(type='text/template', id='tmpl-article')
       div#actions(style='margin-top: 20px;')
         .btn-group
           button.btn.btn-primary.btn-sort Create Date
@@ -80,13 +67,29 @@ block content
       <% }); %>
 
     script(type='text/template', id='tmpl-results')
+      h4 Your Searching Result
       <% _.each(articles, function(article) { %>
       .well
-        h1 <%= article.subject %>
-        p.lead
-          | by
-          | &nbsp;<%= article._author.name %>
+        h5 <%= article.subject %>
+        | by <%= article._author.name %>
         p
           span.glyphicon.glyphicon-time
           | Posted on <%= article.createTiming %>
       <% }); %>
+
+    script(type='text/template', id='tmpl-post')
+      form.form-horizontal
+      fieldset
+      legend Write down your thoughts.
+        .control-group
+          label.control-label(for="subject") Subject
+          .controls
+            input#subject.input-xlarge(type="text", placeholder="Create your article.", size="78")
+        .control-group
+          label.control-label(for="content") Content
+          .controls
+            textarea#content(rows="10", cols="80")
+        .control-group
+          label.control-label(for="post-submit")
+          .controls
+             button#btn-post-submit.btn.btn-primary Post

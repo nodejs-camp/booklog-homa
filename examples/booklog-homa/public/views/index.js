@@ -6,9 +6,9 @@
 /**
  * MODELS
  **/
-app.SearchedSubject = Backbone.Model.extend({  
-  //url: function(){return 'http://localhost:3000/1/article/author/'+this.attributes.name},
-  url: function(){return 'http://localhost:3000/1/article/tag/'+this.attributes.tag},
+app.SearchRslt = Backbone.Model.extend({  
+  //url: function(){return 'http://localhost:3000/1/article/tag/'+this.attributes.tag},
+  url: function(){return 'http://localhost:3000/1/article/tag/'+this.tag},
   tag: "",
   defaults: {
     success: false,
@@ -21,6 +21,18 @@ app.SearchedSubject = Backbone.Model.extend({
       "_author": "",
       "createTiming": ""
     }]
+  }
+});
+
+app.Post = Backbone.Model.extend({  
+  //url: 'http://localhost:3000/1/article',
+  url: function(){return 'http://localhost:3000/1/article'},
+  defaults: {
+    success: false,
+    errors: [],
+    errfor: {},
+    subject: "",
+    content: ""
   }
 });
 
@@ -50,43 +62,78 @@ app.Article = Backbone.Model.extend({
     //MVVM
     el: '#search-section',
     events: {
-      'click .btn-search':'search'
+      'click #btn-search':'search'
     },
     initialize: function() {
-        this.model = new app.SearchedSubject();
+        console.log("search initialize");
+        this.model = new app.SearchRslt();
         this.template = _.template($('#tmpl-results').html());
         this.model.bind('change', this.render, this);//status change
         //this.model.fetch();
     },
     render: function() {
         var data = this.template(this.model.attributes);
-        this.$el.html(data);
+        $("#searchRslt-section").html(data);
         return this;
     },
     search: function() {
       var tag = this.$el.find('#search_tag').val();
-      //alert('ok');
-      this.model.set('tag', tag);
+      console.log("searching for "+tag);
+      this.model.tag = tag;
+      //this.model.set('tag',tag);
       this.model.fetch();
     }
   });
 
+  /**
+ * VIEWS
+ **/
   app.PostView = Backbone.View.extend({
-  	el: '#blog-post',
+    el: '#post-section',
+    events: {
+      'submit form': 'preventSubmit',
+      'click #btn-post-submit': 'post'
+    },
+    initialize: function() {
+        this.model = new app.Post();
+        this.template = _.template($('#tmpl-post').html());
+        this.render();
+    },
+    render: function() {
+        var data = this.template();
+        this.$el.html(data);
+        return this;
+    },
+    preventSubmit: function(event) {
+        event.preventDefault();
+    },
+    post: function() {
+      var subject = this.$el.find('#subject').val();
+      var content = this.$el.find('#content').val();
+
+      this.model.save({
+        subject: subject,
+        content: content
+      });
+    }
+  });
+
+  app.ArticleView = Backbone.View.extend({
+  	el: '#article-section',
     events: {
       'click .btn-sort':'sort',//space between click and . is mandatory.
       'click .btn-format':'formatDate'
     },
     initialize: function() {
         this.model = new app.Article();
-        this.template = _.template($('#tmpl-post').html());
+        this.template = _.template($('#tmpl-article').html());
         this.model.bind('change', this.render, this);
         this.model.fetch();
     },
     render: function() {
         var data = this.template(this.model.attributes);
         this.$el.html(data);
-        //this.formatDate();
+        this.formatDate();
         return this;
     },
     sort: function() {
@@ -112,6 +159,7 @@ app.Article = Backbone.Model.extend({
  * BOOTUP
  **/
   $(document).ready(function() {
-    app.postView = new app.PostView();
+    app.articleView = new app.ArticleView();
     app.searchView = new app.SearchView();
+    app.postView = new app.PostView();
   });
