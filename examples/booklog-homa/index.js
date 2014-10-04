@@ -13,6 +13,7 @@ var pub = __dirname + '/public';
 var app = express();
 app.use(express.static(pub));
 
+var events = require('events');
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/booklog2');
 
@@ -165,7 +166,7 @@ app.get('/logout', function(req, res){
 });
 
 app.get('/download', function(req, res) {
-  var events = require('events');
+  //var events = require('events');
   var workflow = new events.EventEmitter();
 
   workflow.outcome = {
@@ -339,37 +340,44 @@ app.get('/1/article', function(req, res) {
 
 app.post('/1/article', jsonParser, function(req, res) {
   //var model = req.app.db.posts;
-
-  var subject = req.body.subject;
+  var subject = req.body.subject;;
   var content = req.body.content;
+  var workflow = new events.EventEmitter();
 
-  /*
-  if (typeof(req.body.subject) === 'undefined') {
-    subject = req.query.subject;
-    content = req.query.content;
-  } else {
-    subject = req.body.subject;
-    content = req.body.content;
-  }*/
+  workflow.outcome = {
+    success: false,
+    errfor: {}
+  };
+  
+  workflow.on("validate", function() {
+    //because backbone defines the default value subject: "", content: ""
+    if (subject.length === 0)//better than subject === ''
+        workflow.outcome.errfor.subject = "必填欄位"; 
 
-  /*
-  var post = {
-    subject: subject,
-    content: content
-  };*/
+    if (content.length === 0)
+        workflow.outcome.errfor.content = "必填欄位"; 
 
-  //console.log(req.user);
+    if (Object.keys(workflow.outcome.errfor).length !== 0)
+        return res.send(workflow.outcome);
+    
+    workflow.emit("save");
+  });
 
-  //posts.push(post);
-  //Create
-  var article = new app.db.articles(
-  {
-    subject: subject,
-    content: content,
-    _author: req.user._id
-  });//new a d"ocument by post object.
-  article.save();
-  res.send({ status: article.subject + " was posted."});
+  workflow.on("save", function() {
+    //Create
+    var article = new app.db.articles(
+    {
+      subject: subject,
+      content: content,
+      _author: req.user._id
+    });//new a document by post object.
+    article.save();
+    workflow.outcome.success = true;
+    workflow.outcome.data = article;
+    return res.send({ status: article.subject + " was posted."});
+  });
+
+  return workflow.emit('validate');
 });
 
 app.delete('/1/article/:id', function(req, res) {

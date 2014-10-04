@@ -79,17 +79,14 @@ block content
 
     script(type='text/template', id='tmpl-post')
       form.form-horizontal
-      fieldset
-      legend Write down your thoughts.
-        .control-group
-          label.control-label(for="subject") Subject
-          .controls
-            input#subject.input-xlarge(type="text", placeholder="Create your article.", size="78")
-        .control-group
-          label.control-label(for="content") Content
-          .controls
-            textarea#content(rows="10", cols="80")
-        .control-group
-          label.control-label(for="post-submit")
-          .controls
-             button#btn-post-submit.btn.btn-primary Post
+        h3 Leave a Message
+        .form-group(class!='<%= errfor.subject ? "has-error" : "" %>')
+          label.control-label(for='subject') Subject
+          input.form-control#subject(name='subject', type='text')
+          label.has-error.control-label.pull-right <%= errfor.subject %>
+        .form-group(class!='<%= errfor.content ? "has-error" : "" %>')
+          label.control-label(for='subject') Content
+          textarea.form-control#content(name='content')
+          label.has-error.control-label.pull-right <%= errfor.content %>
+        .form-group
+          button#btn-post-submit.btn.btn-primary(name='btn-post-submit') Post
