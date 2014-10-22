@@ -362,37 +362,33 @@ app.post('/1/article/:id/order', jsonParser, function(req, res) {
     errfor: {}
   };
 
-  workflow.on("validate", function() {
-    paypal.payment.create(payment_details, function(err, res){
+  workflow.on("order", function() {
+    paypal.payment.create(payment_details, function(err, payment){
         if (err) {
             console.log(err);
             return res.send(workflow.outcome);
         }
 
-        if (res) {
+        if (payment) {
             console.log("Create Payment Response");
-            console.log(res);
-            workflow.emit("order");
+            console.log(payment);
+            //Create
+            var order = new app.db.orders(
+            {
+                _buyer: req.user._id,
+                _article: req.params.id,
+                payService:"paypal",
+                paymentInfo:payment
+              });//new a document by post object.
+            order.save();
+            workflow.outcome.success = true;
+            workflow.outcome.data = order;
+            return res.send(workflow.outcome);
         }
     });
   });
 
-  workflow.on("order", function() {
-    //Create
-    var order = new app.db.orders(
-    {
-      _buyer: req.user._id,
-      _article: req.params.id,
-      payService:"paypal",
-      paymentInfo:payment_details
-    });//new a document by post object.
-    order.save();
-    workflow.outcome.success = true;
-    workflow.outcome.data = order;
-    return res.send(workflow.outcome);
-  });
-
-  return workflow.emit('validate');
+  return workflow.emit('order');
 });
 
 app.post('/1/article', jsonParser, function(req, res) {
