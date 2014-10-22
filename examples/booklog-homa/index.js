@@ -14,6 +14,7 @@ var app = express();
 app.use(express.static(pub));
 
 var events = require('events');
+var _ = require('underscore');
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/booklog2');
 
@@ -46,6 +47,13 @@ var memberSchema = new mongoose.Schema({
     fullInfo: {}
 });
 
+var orderSchema = new mongoose.Schema({
+    _buyer: { type: mongoose.Schema.Types.ObjectId, ref: 'Member' },
+    _article: { type: mongoose.Schema.Types.ObjectId, ref: 'Article' },
+    payService:{type: String},
+    paymentInfo:{}
+});
+
 //put to express framework
 //'Post'=Tablename
 //Model is definition of document.
@@ -53,7 +61,8 @@ var memberSchema = new mongoose.Schema({
 //Collection name=&model_name+"s"(lower case), e.g. posts.
 app.db = {
   articles: mongoose.model('Article', articleSchema),
-  members: mongoose.model('Member', memberSchema)
+  members: mongoose.model('Member', memberSchema),
+  orders: mongoose.model('Order', orderSchema)
 };
 
 // Optional since express defaults to CWD/views
@@ -117,6 +126,16 @@ passport.use(new FacebookStrategy({
     });
   }
 ));
+
+var paypal = require('paypal-rest-sdk');
+
+paypal.configure({
+  'mode': 'sandbox', //sandbox or live
+  //'host': 'api.sandbox.paypal.com',
+  //'port': '',
+  'client_id': 'AVCoixDvPUw5s42Fvw0A8g5BX-fTVCanS5mAeYOMhs3UYIoKp2PWPS2zvg7n',
+  'client_secret': 'EOdRBBAhkcQ3cYWBfyITuhRhBDYQ9otkhnUM_ijkRhsBqMrSfakp7HtobcYE'
+});
 
 // Redirect the user to Facebook for authentication.  When complete,
 // Facebook will redirect the user back to the application at
@@ -289,54 +308,92 @@ app.get('/1/article/tag/:tag', function(req, res) {
 });
 
 app.get('/1/article', function(req, res) { 
-  //var Article = app.db.articles;
-  //var id;
+  var userId = req.user._id;
   var sort = req.query.sort; // ?sort=date
-  var options = {sort: 'createTiming'};
-
-  // Default options
-  /*
-  options = {
-    sort: 'timeCreated'
-  };*/
+  var options = {sort: 'createTiming'};// Default options
 
   if (sort === 'date') {
     options.sort = '-createTiming';
   }
-  
+
   app.db.articles
   .find()
   .populate('_author')
   .sort(options.sort)
+  .lean()
   .exec(function(err, articles) {
-    /*console.log(articles);
-    for (seq in articles){
-        console.log("seq="+seq);
-        console.log("article="+articles[seq]);
-        console.log("subject="+articles[seq].subject);
-        console.log("content="+articles[seq].content);
-        console.log("_author="+articles[seq]._author);
-        console.log("name="+articles[seq]._author.name);
-    }*/
-    res.send({articles: articles}); 
+    var maxCnt = articles.length;
+    var counter = 0;
+    _.each(articles, function(article){
+      app.db.orders.findOne({$and:[{_buyer:userId}, {_article:article._id}]},
+      function(err, order) {
+          article.myOrder = order;
+          if (++counter===maxCnt)
+            return res.send({articles:articles});
+      });
+    });
   });
-  
-  /*Article.find(function(err, articles) {
-    for (seq in articles){
-        console.log("seq="+seq);
-        console.log("article="+articles[seq]);
-        console.log("subject="+articles[seq].subject);
-        console.log("content="+articles[seq].content);
-        id = articles[seq]._author;
-        console.log("id="+id);
-        app.db.members.findOne({_id: id}, function(err, member) {
-            console.log("member name="+member.name);
-        });
-    }
-    res.send({articles: articles}); 
-  });*/
 });
 
+app.post('/1/article/:id/order', jsonParser, function(req, res) {
+    var payment_details = {
+      "intent": "sale",
+      "payer": {
+        "payment_method": "paypal"
+       },
+      redirect_urls: {
+
+                    // http://localhost:3000/1/post/539eb886e8dbde4b39000007/paid?token=EC-4T17102178173001V&PayerID=QPPLBGBK5ZTVS
+                    return_url: 'http://localhost:3000/1/post/' + 'aaa' + '/paid',
+                    cancel_url: 'http://localhost:3000/1/post/' + 'aaa' + '/cancel'
+                },
+      "transactions": [{
+        "amount": {
+          "total": "49",
+          "currency": "TWD"},
+        "description": "購買教學文章" }
+       ]
+    };
+
+  var workflow = new events.EventEmitter();
+
+  workflow.outcome = {
+    success: false,
+    errfor: {}
+  };
+
+  workflow.on("validate", function() {
+    paypal.payment.create(payment_details, function(err, res){
+        if (err) {
+            console.log(err);
+            return res.send(workflow.outcome);
+        }
+
+        if (res) {
+            console.log("Create Payment Response");
+            console.log(res);
+            workflow.emit("order");
+        }
+    });
+  });
+
+  workflow.on("order", function() {
+    //Create
+    var order = new app.db.orders(
+    {
+      _buyer: req.user._id,
+      _article: req.params.id,
+      payService:"paypal",
+      paymentInfo:payment_details
+    });//new a document by post object.
+    order.save();
+    workflow.outcome.success = true;
+    workflow.outcome.data = order;
+    return res.send(workflow.outcome);
+  });
+
+  return workflow.emit('validate');
+});
 
 app.post('/1/article', jsonParser, function(req, res) {
   //var model = req.app.db.posts;

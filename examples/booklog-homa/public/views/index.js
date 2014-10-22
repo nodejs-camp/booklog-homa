@@ -113,15 +113,33 @@ app.Article = Backbone.Model.extend({
         success: false,
         errors: [],
         errfor: {},
-	      articles: [
+	    articles: [
         {
-	          "content": "",
+	        "content": "",
       	    "_id": "",
-	          "subject": "No articles",
+	        "subject": "No articles",
             "_author": "",
-            "createTiming": ""
-    	  }]
+            "createTiming": "",
+            "myOrder": {
+                "_id":""
+            }
+        }]
     }
+});
+
+app.ArticleOrder = Backbone.Model.extend({  
+  //url: 'http://localhost:3000/1/article',
+    //console.log("ArticleOrder 1");
+    url: function(){return 'http://localhost:3000/1/article/'+this.articleId+'/order'},
+    //console.log("ArticleOrder 2");
+    articleId:"",
+    //console.log("ArticleOrder 3");
+    defaults: {
+        success: false,
+        errors: [],
+        errfor: {}
+    }
+    //console.log("ArticleOrder 4");
 });
 
 /**
@@ -131,7 +149,8 @@ app.ArticleView = Backbone.View.extend({
 	  el: '#article-section',
     events: {
         'click .btn-sort':'sort',//space between click and . is mandatory.
-        'click .btn-format':'formatDate'
+        'click .btn-format':'formatDate',
+        'click [data-purchase-for]':'order'//html5 attribute:data-purchase-for
     },
     initialize: function() {
         this.model = new app.Article();
@@ -159,6 +178,24 @@ app.ArticleView = Backbone.View.extend({
             //console.log("me.text()="+me.text());
             //var fromNow = moment( me.text() ).startOf('day').fromNow();
             me.html( moment( me.text() ).startOf('day').fromNow() );
+        });
+    },
+    order: function(event){
+        var me = this.$el.find(event.target);
+        var articletId = me.data('purchase-for');
+        var self = this;
+        console.log("Before ArticleOrder");
+        this.order = new app.ArticleOrder();
+        //this.order.set('articleId', articletId);
+        this.order.articleId = articletId;
+        this.order.save(this.model.attributes, {
+          success: function(model, response, options) {
+            alert('訂購成功。等候付款！')
+            self.model.fetch();
+          },
+          error: function(model, response, options) {
+            alert('失敗')
+          }
         });
     }
 });

@@ -54,6 +54,11 @@ block content
       <% _.each(articles, function(article) { %>
       .well(style='margin-top: 20px;')
         h1 <%= article.subject %>
+        <% if (_.isEmpty(article.myOrder)) { %>
+        button.btn.btn-default(data-purchase-for!='<%= article._id %>') 下訂
+        <% } else { %>
+        a.btn.btn-danger(href='<%= article.myOrder.paymentInfo.links[1].href %>', target='_blank') 付款
+        <% } %>
         p.lead
           | by
           | &nbsp;<%= article._author.name %>
@@ -61,9 +66,6 @@ block content
           span.glyphicon.glyphicon-time
           | Posted on 
           span.post-date <%= article.createTiming %>
-        img.img-responsive(src='http://placehold.it/900x300', alt='')
-        p.lead
-          | <%= article.content %>
       <% }); %>
 
     script(type='text/template', id='tmpl-results')
