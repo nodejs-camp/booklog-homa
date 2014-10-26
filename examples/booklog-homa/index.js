@@ -336,23 +336,24 @@ app.get('/1/article', function(req, res) {
 });
 
 app.post('/1/article/:id/order', jsonParser, function(req, res) {
+    var articleId = req.params.id;
     var payment_details = {
-      "intent": "sale",
-      "payer": {
-        "payment_method": "paypal"
-       },
-      redirect_urls: {
-
-                    // http://localhost:3000/1/post/539eb886e8dbde4b39000007/paid?token=EC-4T17102178173001V&PayerID=QPPLBGBK5ZTVS
-                    return_url: 'http://localhost:3000/1/post/' + 'aaa' + '/paid',
-                    cancel_url: 'http://localhost:3000/1/post/' + 'aaa' + '/cancel'
-                },
-      "transactions": [{
-        "amount": {
-          "total": "49",
-          "currency": "TWD"},
-        "description": "購買教學文章" }
-       ]
+        "intent": "sale",
+        "payer": {
+            "payment_method": "paypal"
+        },
+        redirect_urls: {
+            // http://localhost:3000/1/post/539eb886e8dbde4b39000007/paid?token=EC-4T17102178173001V&PayerID=QPPLBGBK5ZTVS
+            return_url: "http://localhost:3000/1/article/"+articleId+"/order/payment",
+            cancel_url: "http://localhost:3000/1/article/"+articleId+"/order/payment"
+        },
+        "transactions": [{
+            "amount": {
+                "total": "49",
+                "currency": "TWD"
+            },
+            "description": "購買教學文章"
+        }]
     };
 
   var workflow = new events.EventEmitter();
@@ -370,13 +371,13 @@ app.post('/1/article/:id/order', jsonParser, function(req, res) {
         }
 
         if (payment) {
-            console.log("Create Payment Response");
-            console.log(payment);
+            //console.log("Create Payment Response");
+            //console.log(payment);
             //Create
             var order = new app.db.orders(
             {
                 _buyer: req.user._id,
-                _article: req.params.id,
+                _article: articleId,
                 payService:"paypal",
                 paymentInfo:payment
               });//new a document by post object.
@@ -389,6 +390,57 @@ app.post('/1/article/:id/order', jsonParser, function(req, res) {
   });
 
   return workflow.emit('order');
+});
+
+/**
+ * GET /1/post/:postId/paid
+ */
+app.get('/1/article/:id/order/payment', function(req, res, next) {
+    var workflow = new events.EventEmitter();
+    var userId = req.user._id;
+    var articleId = req.params.id;
+    //var orders = req.app.db.orders;
+    var payerId = req.query.PayerID;//GET /1/article/5426f1605ea278f81c6b5946/order/payment?token=EC-6CD05439BE253094S&PayerID=8UEEH9VWTD7N8
+    var paymentId;
+    
+    console.log("/1/article/:id/order/payment");
+
+    workflow.outcome = {
+      success: false
+    };
+
+    //return res.send(workflow.outcome);
+
+    workflow.on('pay', function() {
+        app.db.orders
+        .findOne({$and:[{_buyer:userId}, {_article:articleId}]})
+        .exec(function(err, order) {
+            paymentId = order.paymentInfo.id;
+            //console.log("paymentId="+paymentId);
+            paypal.payment.execute(paymentId, {payer_id: payerId}, function (err, payment) {
+                order.update({paymentInfo:payment},function(err, numberAffected, raw){
+                    if (err) return handleError(err);
+                    //console.log('The number of updated documents was %d', numberAffected);
+                    //console.log('The raw response from Mongo was ', raw);
+                });
+                workflow.outcome.success = true;
+                workflow.outcome.data = payment;
+                return res.send(workflow.outcome);
+              //return workflow.emit('updateCustomer');
+            });
+        });
+    });
+
+    /*
+    workflow.on('updateCustomer', function() {
+    posts
+    .findByIdAndUpdate(postId, { $addToSet: { customers: req.user._id } }, function(err, post) {
+      workflow.outcome.success = true;
+      return res.send(workflow.outcome);
+    });
+    });*/
+
+    return workflow.emit('pay');
 });
 
 app.post('/1/article', jsonParser, function(req, res) {

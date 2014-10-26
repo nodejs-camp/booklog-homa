@@ -34,7 +34,7 @@ app.SearchView = Backbone.View.extend({
         'click #btn-search':'search'
     },
     initialize: function() {
-        console.log("search initialize");
+        //console.log("search initialize");
         this.model = new app.SearchRslt();
         this.template = _.template($('#tmpl-results').html());
         this.model.bind('change', this.render, this);//status change
@@ -47,7 +47,7 @@ app.SearchView = Backbone.View.extend({
     },
     search: function() {
         var tag = this.$el.find('#search_tag').val();
-        console.log("searching for "+tag);
+        //console.log("searching for "+tag);
         this.model.tag = tag;
         //this.model.set('tag',tag);
         this.model.fetch();
@@ -159,6 +159,7 @@ app.ArticleView = Backbone.View.extend({
         this.model.fetch();
     },
     render: function() {
+        console.log("render");
         var data = this.template(this.model.attributes);
         this.$el.html(data);
         this.formatDate();
@@ -184,9 +185,9 @@ app.ArticleView = Backbone.View.extend({
         var me = this.$el.find(event.target);
         var articletId = me.data('purchase-for');
         var self = this;
-        console.log("Before ArticleOrder");
-        this.order = new app.ArticleOrder();
+        //console.log("Before ArticleOrder");
         //this.order.set('articleId', articletId);
+        this.order = new app.ArticleOrder();
         this.order.articleId = articletId;
         this.order.save(this.model.attributes, {
           success: function(model, response, options) {

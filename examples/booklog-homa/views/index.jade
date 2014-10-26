@@ -56,8 +56,10 @@ block content
         h1 <%= article.subject %>
         <% if (_.isEmpty(article.myOrder)) { %>
         button.btn.btn-default(data-purchase-for!='<%= article._id %>') 下訂
-        <% } else { %>
-        a.btn.btn-danger(href='<%= article.myOrder.paymentInfo.links[1].href %>', target='_blank') 付款
+        <% } else if (article.myOrder.paymentInfo.state === "created") { %>
+        a.btn.btn-danger(href!='<%= article.myOrder.paymentInfo.links[1].href %>', target='_blank') 付款
+        <% } else if (article.myOrder.paymentInfo.state === "approved") { %>
+        button.btn.btn-primary(name='btn-view-content') 閱讀全文
         <% } %>
         p.lead
           | by
@@ -66,7 +68,7 @@ block content
           span.glyphicon.glyphicon-time
           | Posted on 
           span.post-date <%= article.createTiming %>
-      <% }); %>
+      <% }); %> 
 
     script(type='text/template', id='tmpl-results')
       h4 Your Searching Result
