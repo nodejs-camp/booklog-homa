@@ -107,7 +107,7 @@ passport.deserializeUser(function(id, done) {
 passport.use(new FacebookStrategy({
     clientID: "573894422722633",
     clientSecret: "cd295293760fb7fe56a69c1aae66da51",
-    callbackURL: "http://localhost:3000/auth/facebook/callback"
+    callbackURL: "http://homatw.com/auth/facebook/callback"
   },
   function(accessToken, refreshToken, profile, done) {
     app.db.members.findOne({"fullInfo._json.id": profile.id},
@@ -343,9 +343,9 @@ app.post('/1/article/:id/order', jsonParser, function(req, res) {
             "payment_method": "paypal"
         },
         redirect_urls: {
-            // http://localhost:3000/1/post/539eb886e8dbde4b39000007/paid?token=EC-4T17102178173001V&PayerID=QPPLBGBK5ZTVS
-            return_url: "http://localhost:3000/1/article/"+articleId+"/order/payment",
-            cancel_url: "http://localhost:3000/1/article/"+articleId+"/order/payment"
+            // http://homatw.com/1/post/539eb886e8dbde4b39000007/paid?token=EC-4T17102178173001V&PayerID=QPPLBGBK5ZTVS
+            return_url: "http://homatw.com/1/article/"+articleId+"/order/payment",
+            cancel_url: "http://homatw.com/1/article/"+articleId+"/order/payment"
         },
         "transactions": [{
             "amount": {
@@ -403,7 +403,7 @@ app.get('/1/article/:id/order/payment', function(req, res, next) {
     var payerId = req.query.PayerID;//GET /1/article/5426f1605ea278f81c6b5946/order/payment?token=EC-6CD05439BE253094S&PayerID=8UEEH9VWTD7N8
     var paymentId;
     
-    console.log("/1/article/:id/order/payment");
+    //console.log("/1/article/:id/order/payment");
 
     workflow.outcome = {
       success: false
@@ -425,7 +425,8 @@ app.get('/1/article/:id/order/payment', function(req, res, next) {
                 });
                 workflow.outcome.success = true;
                 workflow.outcome.data = payment;
-                return res.send(workflow.outcome);
+                //return res.send(workflow.outcome);
+                res.render('index');
               //return workflow.emit('updateCustomer');
             });
         });

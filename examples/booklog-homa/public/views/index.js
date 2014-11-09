@@ -7,8 +7,8 @@ var app = app || {};
  * MODELS
  **/
 app.SearchRslt = Backbone.Model.extend({  
-    //url: function(){return 'http://localhost:3000/1/article/tag/'+this.attributes.tag},
-    url: function(){return 'http://localhost:3000/1/article/tag/'+this.tag},
+    //url: function(){return '/1/article/tag/'+this.attributes.tag},
+    url: function(){return '/1/article/tag/'+this.tag},
     tag: "",
     defaults: {
         success: false,
@@ -58,8 +58,8 @@ app.SearchView = Backbone.View.extend({
  * MODELS
  **/
 app.Post = Backbone.Model.extend({  
-    //url: 'http://localhost:3000/1/article',
-    url: function(){return 'http://localhost:3000/1/article'},
+    //url: '/1/article',
+    url: function(){return '/1/article'},
     defaults: {
         success: false,
         errors: [],
@@ -106,8 +106,8 @@ app.PostView = Backbone.View.extend({
  * MODELS
  **/
 app.Article = Backbone.Model.extend({  
-  //url: 'http://localhost:3000/1/article',
-    url: function(){return 'http://localhost:3000/1/article'+this.query},
+  //url: '/1/article',
+    url: function(){return '/1/article'+this.query},
     query: "",
     defaults: {
         success: false,
@@ -128,9 +128,9 @@ app.Article = Backbone.Model.extend({
 });
 
 app.ArticleOrder = Backbone.Model.extend({  
-  //url: 'http://localhost:3000/1/article',
+  //url: '/1/article',
     //console.log("ArticleOrder 1");
-    url: function(){return 'http://localhost:3000/1/article/'+this.articleId+'/order'},
+    url: function(){return '/1/article/'+this.articleId+'/order'},
     //console.log("ArticleOrder 2");
     articleId:"",
     //console.log("ArticleOrder 3");
@@ -189,6 +189,7 @@ app.ArticleView = Backbone.View.extend({
         //this.order.set('articleId', articletId);
         this.order = new app.ArticleOrder();
         this.order.articleId = articletId;
+        console.log("article order:"+articletId);
         this.order.save(this.model.attributes, {
           success: function(model, response, options) {
             alert('訂購成功。等候付款！')
